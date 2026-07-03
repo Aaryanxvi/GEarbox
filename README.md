@@ -2,13 +2,13 @@
 
 [![test gear.sh](https://github.com/Aaryanxvi/GEarbox/actions/workflows/test.yml/badge.svg)](https://github.com/Aaryanxvi/GEarbox/actions/workflows/test.yml)
 
-Gearbox is a physical gear-shifter for coding agents. It's a floating H-pattern shifter that drives model/effort switching in a running session by injecting the commands into your terminal — plus live instrumentation: a fuel gauge for the context window and utilization bars for your rate limits. Switch models by dragging a stick, not by typing.
+Gearbox is a physical gear-shifter for Claude Code. It's a floating H-pattern shifter that drives `/model`, `/effort`, and `/fast` in a running session — plus live instrumentation: a fuel gauge for the context window and utilization bars for your rate limits. Switch models by dragging a stick, not by typing.
 
-Two flavors:
-- **`shift-gui.ps1`** — for **Claude Code**. Drives `/model`, `/effort`, `/fast`.
-- **`shift-gui-codex.ps1`** — for the **Codex CLI**. Drives `/model`, `/reasoning`, `/compact`. Gears **auto-sync** to whatever models you actually have (read from `~/.codex/models_cache.json`); fuel and usage bars read straight from the session file — no API calls.
+- **`shift-gui.ps1`** — **Windows** GUI (PowerShell + WinForms). Types the command into your terminal.
+- **`gearbox-mac.swift`** — **macOS** GUI (Swift + AppKit). Writes the command through the terminal's own AppleScript API (iTerm2 / Terminal.app) — no keystroke injection, no Accessibility prompt.
+- **`gear.sh`** — **macOS / Linux** terminal launcher, if you'd rather not run the GUI.
 
-Windows runs the full GUI. macOS and Linux get a terminal launcher (`gear.sh`).
+> A Codex CLI version is in progress on the [`experimental`](https://github.com/Aaryanxvi/GEarbox/tree/experimental) branch.
 
 <p align="center">
   <img src="dashboard.png" alt="Gearbox dashboard: H-pattern shifter, tachometer, fuel gauge, effort levers, NOS button, and usage bars" width="300">
@@ -51,13 +51,13 @@ powershell -sta -File shift-gui.ps1
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
-### Codex CLI (GUI)
+### macOS (GUI)
 
-```powershell
-powershell -sta -File shift-gui-codex.ps1
+```bash
+swift gearbox-mac.swift
 ```
 
-Same shifter, wired for Codex. Gears are built at launch from your `~/.codex/models_cache.json` — you get exactly the models Codex offers you, in priority order. To add a **legacy** model (one Codex only exposes via `codex -m <slug>`), drop its slug into the `$extraModels` array at the top of the script; leave it empty and no legacy gears show. Effort levers send `/reasoning`, the NOS bottle sends `/compact`, and the fuel gauge + 5H/weekly bars read from the session rollout file (no network, no credentials).
+Needs Xcode Command Line Tools (`xcode-select --install`) — the one dependency, the way PowerShell is on Windows. Same shifter, drawn natively with AppKit. Instead of injecting keystrokes it writes the command through the terminal's own scripting interface: iTerm2's `write text` or Terminal.app's `do script`. Run Claude Code in **iTerm2 or Terminal.app**, keep that terminal frontmost, and drag the stick. (New — give it a run and open an issue if anything misbehaves.)
 
 ### Launch from inside Claude Code (`/gear`)
 
@@ -104,8 +104,8 @@ chmod +x gear.sh
 
 ## 📦 What's inside
 
-- `shift-gui.ps1` — the Windows GUI for Claude Code. Single file, WinForms, no dependencies.
-- `shift-gui-codex.ps1` — the Windows GUI for the Codex CLI. Auto-syncs gears from your model cache.
+- `shift-gui.ps1` — the Windows GUI. Single file, WinForms, no dependencies.
+- `gearbox-mac.swift` — the macOS GUI. Single file, AppKit, needs Xcode CLT.
 - `gear.sh` — the macOS/Linux terminal launcher.
 - `commands/gear.md` — the `/gear` slash command for Claude Code.
 
