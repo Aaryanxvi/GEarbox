@@ -4,7 +4,7 @@
 
 Gearbox is a physical gear-shifter for Claude Code. It's a floating H-pattern shifter that drives `/model`, `/effort`, and `/fast` in a running Claude session by injecting the commands into your terminal — plus live instrumentation: a fuel gauge for the context window and utilization bars for your rate limits. Switch models by dragging a stick, not by typing.
 
-Windows runs the full GUI. macOS and Linux get a terminal launcher (`gear.sh`).
+Windows runs the full GUI. macOS and Linux get a terminal launcher (`gear.sh`). There's also a launcher for **OpenAI Codex CLI** (`gear-codex.sh`).
 
 <p align="center">
   <img src="dashboard.png" alt="Gearbox dashboard: H-pattern shifter, tachometer, fuel gauge, effort levers, NOS button, and usage bars" width="300">
@@ -69,6 +69,17 @@ chmod +x gear.sh
 
 `gear.sh` launches a fresh `claude` in the chosen model/effort. Inside a live session, `/model` and `/effort` are the gears.
 
+### OpenAI Codex CLI
+
+```bash
+chmod +x gear-codex.sh
+./gear-codex.sh            # interactive menu
+./gear-codex.sh 3         # gear 3 (medium reasoning effort)
+./gear-codex.sh 4 o3      # gear 4 (high) on an explicit model
+```
+
+Codex's real "gear" is reasoning effort, so the gears shift `model_reasoning_effort` (minimal → high) and the model stays `gpt-5.4` unless you override it. Codex already renders context-remaining and 5-hour/weekly limits in its own status line — set `status_line` in `~/.codex/config.toml` — so there's no separate fuel gauge to build.
+
 ## 📊 The dashboard
 
 | Control | Command sent | Notes |
@@ -93,7 +104,8 @@ chmod +x gear.sh
 ## 📦 What's inside
 
 - `shift-gui.ps1` — the Windows GUI. Single file, WinForms, no dependencies.
-- `gear.sh` — the macOS/Linux terminal launcher.
+- `gear.sh` — the macOS/Linux terminal launcher for Claude Code.
+- `gear-codex.sh` — the terminal launcher for OpenAI Codex CLI.
 - `commands/gear.md` — the `/gear` slash command for Claude Code.
 
 ## ⚠️ Notes & limitations
