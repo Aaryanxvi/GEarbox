@@ -79,7 +79,10 @@ function Draw-GlowText($g,[string]$text,$font,$x,$y,[Drawing.Color]$glow,[Drawin
   $cb.Dispose()
 }
 
-function Send-Keys-To-Target([string]$text) {
+function Send-Keys-To-Target([string]$text, [string]$afterOpen='') {
+  # $afterOpen: keystrokes sent AFTER the command's first Enter (which opens an
+  # interactive menu) and BEFORE the confirm Enter. Used by /fast: '{DOWN}' moves
+  # off the pre-highlighted current state so the confirm actually flips it.
   if ($script:target -eq [IntPtr]::Zero) { $script:statusLbl.Text='SET TARGET FIRST'; return $false }
   # SW_RESTORE only when minimized -- unconditional restore un-maximized the target
   if ([Win]::IsIconic($script:target)) { [Win]::ShowWindow($script:target,9) | Out-Null }
@@ -91,6 +94,10 @@ function Send-Keys-To-Target([string]$text) {
   Start-Sleep -Milliseconds 180
   [Windows.Forms.SendKeys]::SendWait('{ENTER}')
   Start-Sleep -Milliseconds 120
+  if ($afterOpen) {
+    [Windows.Forms.SendKeys]::SendWait($afterOpen)
+    Start-Sleep -Milliseconds 120
+  }
   [Windows.Forms.SendKeys]::SendWait('{ENTER}')
   return $true
 }
@@ -744,7 +751,11 @@ $nos.Add_Paint({
 })
 
 $nos.Add_MouseUp({
-  if (Send-Keys-To-Target '/fast') {
+  # /fast opens a 2-item On/Off menu with the current state pre-highlighted; it
+  # wraps, so one {DOWN} always lands on the opposite -> confirm Enter flips it.
+  # ponytail: nitro LED tracks flips relative to itself; if it ever drifts from
+  # the real state the toggle still flips correctly, only the light reads wrong.
+  if (Send-Keys-To-Target '/fast' '{DOWN}') {
     $script:nitro = -not $script:nitro
     $script:purge = 8                    # spray burst animation
     $nos.Invalidate()
