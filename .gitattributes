@@ -1,7 +1,3 @@
-*.sh text eol=lf
-*.ps1 text eol=crlf
-
-dashboard.png -text
-*.yml text eol=lf
 *.ps1 text eol=crlf
 *.swift text eol=lf
+dashboard.png -text

@@ -1,18 +1,22 @@
 ---
 description: Launch the Gearbox model shifter
-allowed-tools: Bash(powershell:*), Bash(bash:*)
+allowed-tools: Bash(powershell:*), Bash(swift:*), Bash(open:*)
 ---
 
-Launch the Gearbox shifter, detached, so it keeps running independently of this session.
+Launch the Gearbox shifter for the user's platform, detached, so it keeps running independently of this session. The repo lives at the path in the user's `GEARBOX_DIR` environment variable; if that isn't set, ask the user for the repo path once.
 
-**Windows** — run this, editing the path to where you cloned the repo:
+**Windows** — launch the GUI, skipping if one is already open:
 
 ```
-powershell -Command "if (Get-Process powershell -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -eq 'MODEL SHIFT' }) { 'already running' } else { Start-Process powershell -ArgumentList '-sta','-WindowStyle','Hidden','-File','C:\path\to\Gearbox\shift-gui.ps1'; 'launched' }"
+powershell -Command "if (Get-Process powershell -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -eq 'MODEL SHIFT' }) { 'already running' } else { Start-Process powershell -ArgumentList '-sta','-WindowStyle','Hidden','-File',(Join-Path $env:GEARBOX_DIR 'shift-gui.ps1'); 'launched' }"
 ```
 
-The guard skips launching if a "MODEL SHIFT" window is already open. Report whether it launched or was already running, in one short line.
+**macOS** — launch the Swift GUI in the background:
 
-**macOS / Linux** — the GUI is Windows-only. Tell the user to open a new terminal and run `./gear.sh` from the repo (`./gear.sh 5 xhigh` for gear + effort). Inside a running session, `/model` and `/effort` are the gears.
+```
+swift "$GEARBOX_DIR/gearbox-mac.swift" &
+```
 
-Do nothing else.
+**Linux** — no GUI yet; tell the user `/model` and `/effort` are the gears in-session.
+
+Report whether it launched or was already running, in one short line. Do nothing else.

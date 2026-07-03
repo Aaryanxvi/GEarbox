@@ -1,12 +1,9 @@
 # 🏎️ Gearbox
 
-[![test gear.sh](https://github.com/Aaryanxvi/GEarbox/actions/workflows/test.yml/badge.svg)](https://github.com/Aaryanxvi/GEarbox/actions/workflows/test.yml)
-
 Gearbox is a physical gear-shifter for Claude Code. It's a floating H-pattern shifter that drives `/model`, `/effort`, and `/fast` in a running session — plus live instrumentation: a fuel gauge for the context window and utilization bars for your rate limits. Switch models by dragging a stick, not by typing.
 
 - **`shift-gui.ps1`** — **Windows** GUI (PowerShell + WinForms). Types the command into your terminal.
 - **`gearbox-mac.swift`** — **macOS** GUI (Swift + AppKit). Writes the command through the terminal's own AppleScript API (iTerm2 / Terminal.app) — no keystroke injection, no Accessibility prompt.
-- **`gear.sh`** — **macOS / Linux** terminal launcher, if you'd rather not run the GUI.
 
 > A Codex CLI version is in progress on the [`experimental`](https://github.com/Aaryanxvi/GEarbox/tree/experimental) branch.
 
@@ -59,27 +56,33 @@ swift gearbox-mac.swift
 
 Needs Xcode Command Line Tools (`xcode-select --install`) — the one dependency, the way PowerShell is on Windows. Same shifter, drawn natively with AppKit. Instead of injecting keystrokes it writes the command through the terminal's own scripting interface: iTerm2's `write text` or Terminal.app's `do script`. Run Claude Code in **iTerm2 or Terminal.app**, keep that terminal frontmost, and drag the stick. (New — give it a run and open an issue if anything misbehaves.)
 
-### Launch from inside Claude Code (`/gear`)
+### Launch with `/gear` from inside Claude Code
 
-Copy the bundled command into your Claude commands directory and point it at your clone:
+Type `/gear` in any Claude Code session to pop the shifter open. Two one-time steps to install it — the command finds the repo through a `GEARBOX_DIR` environment variable, so there's no path to hand-edit.
+
+**Windows (PowerShell):**
 
 ```powershell
+# 1. copy the command into Claude Code, from inside your cloned repo folder
 mkdir $HOME\.claude\commands -Force
 copy commands\gear.md $HOME\.claude\commands\
+
+# 2. tell it where the repo is (persists across sessions)
+setx GEARBOX_DIR "$PWD"
 ```
 
-Edit `$HOME\.claude\commands\gear.md` so the `-File` path points at your `shift-gui.ps1`, restart Claude Code, and `/gear` launches the dashboard (with a guard that won't spawn a second copy).
-
-### macOS / Linux (terminal)
+**macOS / Linux:**
 
 ```bash
-chmod +x gear.sh
-./gear.sh            # interactive gear menu
-./gear.sh 3          # launch straight into gear 3
-./gear.sh 5 xhigh    # gear 5 at xhigh effort
+# 1. copy the command into Claude Code, from inside your cloned repo folder
+mkdir -p ~/.claude/commands
+cp commands/gear.md ~/.claude/commands/
+
+# 2. tell it where the repo is (add to ~/.zshrc or ~/.bashrc to persist)
+echo "export GEARBOX_DIR=\"$PWD\"" >> ~/.zshrc
 ```
 
-`gear.sh` launches a fresh `claude` in the chosen model/effort. Inside a live session, `/model` and `/effort` are the gears.
+Restart Claude Code, then `/gear` launches the shifter (Windows/macOS) with a guard that won't spawn a second copy.
 
 ## 📊 The dashboard
 
@@ -106,7 +109,6 @@ chmod +x gear.sh
 
 - `shift-gui.ps1` — the Windows GUI. Single file, WinForms, no dependencies.
 - `gearbox-mac.swift` — the macOS GUI. Single file, AppKit, needs Xcode CLT.
-- `gear.sh` — the macOS/Linux terminal launcher.
 - `commands/gear.md` — the `/gear` slash command for Claude Code.
 
 ## ⚠️ Notes & limitations
