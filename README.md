@@ -4,6 +4,10 @@ Gearbox is a physical gear-shifter for Claude Code. It's a floating H-pattern sh
 
 Windows runs the full GUI. macOS and Linux get a terminal launcher (`gear.sh`).
 
+<p align="center">
+  <img src="dashboard.png" alt="Gearbox dashboard: H-pattern shifter, tachometer, fuel gauge, effort levers, NOS button, and usage bars" width="300">
+</p>
+
 ## 🚦 Quickstart
 
 ```powershell
