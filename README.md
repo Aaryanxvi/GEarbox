@@ -1,128 +1,101 @@
-# 🏎️ Gearbox — shift gears on Claude Code
+# 🏎️ Gearbox
 
-A little racing dashboard that sits on your screen and lets you **switch Claude Code's model with a gear stick** instead of typing commands. Drag the shifter into a gate and it swaps the model for you. It also shows you a **fuel gauge** (how much context/memory you have left), your **usage limits**, and a **nitro button** for fast mode.
+Gearbox is a physical gear-shifter for Claude Code. It's a floating H-pattern shifter that drives `/model`, `/effort`, and `/fast` in a running Claude session by injecting the commands into your terminal — plus live instrumentation: a fuel gauge for the context window and utilization bars for your rate limits. Switch models by dragging a stick, not by typing.
 
-> Works fully on **Windows**. Mac and Linux get a simpler terminal version (`gear.sh`).
+Windows runs the full GUI. macOS and Linux get a terminal launcher (`gear.sh`).
 
----
+## 🚦 Quickstart
 
-## What it does
-
-| Part | What it's for |
-|------|---------------|
-| 🕹️ **The gear stick** | Drag it into a gate (1–5 or R) to switch Claude's model — Haiku, Sonnet, Opus, Fable. |
-| ⛽ **Fuel gauge** | How much of Claude's memory (context window) is still free. Full tank = fresh chat. |
-| 🔧 **Effort levers** (left) | Set how hard Claude thinks: LOW / MED / HIGH / XHI. |
-| 💨 **NOS bottle** | Toggles Claude Code's fast mode on/off. |
-| 📊 **5H / WK bars** (right) | Your usage limits — how much you've used in the last 5 hours and this week. |
-
----
-
-## Before you start — what you need
-
-1. **A Windows PC.** (PowerShell is already built in — you don't install anything.)
-2. **Claude Code** installed and working. If you can open a terminal and type `claude` and it runs, you're good. If not, get it here: https://claude.com/claude-code
-
-That's it. No downloads to install, no accounts, no setup.
-
----
-
-## Step 1 — Download Gearbox
-
-**Easiest way (no tools needed):**
-
-1. Go to the GitHub page: https://github.com/Aaryanxvi/GEarbox
-2. Click the green **`< > Code`** button.
-3. Click **Download ZIP**.
-4. Find the ZIP in your Downloads folder, right-click it → **Extract All**.
-5. You now have a folder called `GEarbox` (or `Gearbox-main`). Remember where it is — for example `C:\Users\YourName\Downloads\Gearbox-main`.
-
----
-
-## Step 2 — Run it
-
-1. Open the Gearbox folder in File Explorer.
-2. Click the address bar at the top (where the folder path shows), type `powershell`, and press **Enter**. A blue/black window opens.
-3. Copy-paste this line and press **Enter**:
-
-   ```powershell
-   powershell -sta -File shift-gui.ps1
-   ```
-
-The dashboard pops up and floats on top of your screen. 🎉
-
-> **If Windows says the script is "blocked" or won't run**, paste this line first, press Enter, then try step 3 again:
-> ```powershell
-> Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-> ```
-> This only allows scripts for that one window — it changes nothing permanently.
-
----
-
-## Step 3 — Use it
-
-1. **Click on your Claude Code terminal window once.** Gearbox automatically "locks on" to the last window you clicked — you'll see its name at the top under **TARGET**.
-2. **Drag the gear stick** into any gate. The moment you drop it, Gearbox types the model-switch command into your Claude terminal for you.
-3. That's the whole thing. Switch gears whenever you want a different model.
-
-The gauges update on their own — fuel every few seconds, usage limits every 5 minutes.
-
----
-
-## The gears
-
-| Gate | Model | Good for |
-|------|-------|----------|
-| **1** | Haiku 4.5 | Quick, cheap, simple stuff |
-| **2** | Sonnet 5 | Everyday driving |
-| **3** | Sonnet 5 (1M) | Same, but huge memory for big projects |
-| **4** | Opus 4.8 | Heavy lifting |
-| **5** | Fable 5 | Maximum power |
-| **R** | Default | Back to your default model |
-
----
-
-## Bonus: launch it with `/gear` inside Claude Code
-
-If you don't want to open PowerShell every time, you can make Claude launch it for you by typing `/gear`.
-
-1. Copy the file `commands/gear.md` from the Gearbox folder into `C:\Users\YourName\.claude\commands\` (create the `commands` folder if it isn't there).
-2. Open that copied `gear.md` in Notepad and change the path to point at your `shift-gui.ps1`.
-3. Restart Claude Code. Now typing `/gear` launches the dashboard.
-
----
-
-## Mac / Linux
-
-The floating dashboard is Windows-only, but there's a terminal version:
-
-```bash
-chmod +x gear.sh      # one-time: make it runnable
-./gear.sh             # pick a gear from a menu
-./gear.sh 3           # jump straight into gear 3
-./gear.sh 5 xhigh     # gear 5, max effort
+```powershell
+git clone https://github.com/Aaryanxvi/GEarbox.git
+cd GEarbox
+powershell -sta -File shift-gui.ps1
 ```
 
-Inside a running Claude session, `/model` and `/effort` do the same job by hand.
+Click your Claude Code terminal once so Gearbox locks onto it (shown under `TARGET`), then drag the stick into a gate. That's it.
 
----
+## ⚙️ How it works
 
-## Common questions
+Gearbox never talks to Claude directly. It targets a terminal window and types into it, exactly as if you'd typed the slash command yourself:
 
-**Is it safe? Does it send my data anywhere?**
-No. Everything runs on your own computer. The fuel gauge reads Claude Code's own local files; the usage bars use the same login token Claude Code already has. Nothing is uploaded.
+- **Targeting** — a focus poller (`user32.dll` `GetForegroundWindow`) tracks the last non-Gearbox window you touched. That window is the target; switching between terminals re-targets automatically.
+- **Injection** — on a shift, Gearbox foregrounds the target (restoring it only if minimized, never resizing it) and sends the command via `SendKeys` + Enter.
+- **Fuel gauge** — reads the target session's transcript under `~/.claude/projects`, sums the newest `usage` entry (`input + cache_creation + cache_read + output`), and renders it against the model's context window (200K for Haiku, 1M for everything else; the 33K autocompact buffer is subtracted for Sonnet to match `/context`).
+- **Usage bars** — call the same OAuth `usage` endpoint the CLI uses, with the token from `~/.claude/.credentials.json`. Cached for 5 minutes, fetched off-thread so the UI never blocks.
 
-**It says "NO TARGET SET" / nothing happens when I shift.**
-Click on your Claude terminal window once so Gearbox knows where to type. Its name should appear under TARGET.
+Nothing leaves your machine. No dependencies beyond PowerShell 5.1 (ships with Windows) and the Claude Code CLI.
 
-**The effort levers start blank every time.**
-That's normal — Gearbox can't read your current effort setting, only set it. Click one to set it.
+## 🔧 Installation
 
-**How do I close it?**
-Just close the dashboard window like any other window.
+### Windows (GUI)
 
----
+Clone or [download the ZIP](https://github.com/Aaryanxvi/GEarbox/archive/refs/heads/main.zip), then run:
 
-## License
+```powershell
+powershell -sta -File shift-gui.ps1
+```
 
-MIT — free to use, change, and share. See [LICENSE](LICENSE).
+`-sta` is required — WinForms needs a single-threaded apartment. If PowerShell blocks the script, allow it for that one session:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+### Launch from inside Claude Code (`/gear`)
+
+Copy the bundled command into your Claude commands directory and point it at your clone:
+
+```powershell
+mkdir $HOME\.claude\commands -Force
+copy commands\gear.md $HOME\.claude\commands\
+```
+
+Edit `$HOME\.claude\commands\gear.md` so the `-File` path points at your `shift-gui.ps1`, restart Claude Code, and `/gear` launches the dashboard (with a guard that won't spawn a second copy).
+
+### macOS / Linux (terminal)
+
+```bash
+chmod +x gear.sh
+./gear.sh            # interactive gear menu
+./gear.sh 3          # launch straight into gear 3
+./gear.sh 5 xhigh    # gear 5 at xhigh effort
+```
+
+`gear.sh` launches a fresh `claude` in the chosen model/effort. Inside a live session, `/model` and `/effort` are the gears.
+
+## 📊 The dashboard
+
+| Control | Command sent | Notes |
+|---------|-------------|-------|
+| Gear stick (gates 1–5, R) | `/model <name>` | Drag into a gate to shift |
+| Effort levers (left) | `/effort low\|medium\|high\|xhigh` | Flip a lever to set thinking depth |
+| NOS bottle | `/fast` | Toggles fast mode |
+| Tachometer / fuel gauge | — | Context window remaining |
+| 5H / WK bars (right) | — | 5-hour and weekly rate-limit utilization |
+
+### 🕹️ Gears
+
+| Gate | Model | `/model` arg |
+|------|-------|--------------|
+| 1 | Haiku 4.5 | `haiku` |
+| 2 | Sonnet 5 | `sonnet` |
+| 3 | Sonnet 5 (1M context) | `sonnet[1m]` |
+| 4 | Opus 4.8 | `opus` |
+| 5 | Fable 5 | `claude-fable-5` |
+| R | Default | `default` |
+
+## 📦 What's inside
+
+- `shift-gui.ps1` — the Windows GUI. Single file, WinForms, no dependencies.
+- `gear.sh` — the macOS/Linux terminal launcher.
+- `commands/gear.md` — the `/gear` slash command for Claude Code.
+
+## ⚠️ Notes & limitations
+
+- **Effort isn't logged to the transcript**, so the levers can't reflect your current setting — they start neutral each launch and only *set* effort when clicked.
+- **Targeting follows focus.** If a shift does nothing, click your Claude terminal so it becomes the target (its title shows under `TARGET`).
+- **Transcripts are read tail-first** (last 1 MB, byte-seeked) so the gauge stays responsive even on multi-megabyte session files.
+
+## 📄 License
+
+MIT — see [LICENSE](LICENSE). Use it, fork it, ship it.
