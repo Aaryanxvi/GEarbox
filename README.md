@@ -1,5 +1,7 @@
 # 🏎️ Gearbox
 
+[![test gear.sh](https://github.com/Aaryanxvi/GEarbox/actions/workflows/test.yml/badge.svg)](https://github.com/Aaryanxvi/GEarbox/actions/workflows/test.yml)
+
 Gearbox is a physical gear-shifter for Claude Code. It's a floating H-pattern shifter that drives `/model`, `/effort`, and `/fast` in a running Claude session by injecting the commands into your terminal — plus live instrumentation: a fuel gauge for the context window and utilization bars for your rate limits. Switch models by dragging a stick, not by typing.
 
 Windows runs the full GUI. macOS and Linux get a terminal launcher (`gear.sh`).

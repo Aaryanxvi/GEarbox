@@ -1,0 +1,57 @@
+name: test gear.sh
+
+on:
+  push:
+    paths: [gear.sh, .github/workflows/test.yml]
+  pull_request:
+    paths: [gear.sh, .github/workflows/test.yml]
+  workflow_dispatch:
+
+jobs:
+  gear:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stub the claude CLI (capture the args gear.sh passes)
+        run: |
+          mkdir -p "$HOME/stub"
+          printf '#!/usr/bin/env bash\necho "claude $*"\n' > "$HOME/stub/claude"
+          chmod +x "$HOME/stub/claude"
+          echo "$HOME/stub" >> "$GITHUB_PATH"
+
+      - name: Run gear.sh across every path and assert
+        run: |
+          set -euo pipefail
+          chmod +x gear.sh
+
+          assert() {  # assert <label> <expected> <actual>
+            if [ "$2" != "$3" ]; then
+              echo "FAIL: $1"; echo "  expected: $2"; echo "  actual:   $3"; exit 1
+            fi
+            echo "ok: $1 -> $3"
+          }
+
+          # each gear maps to the right model (last line = the stubbed claude call)
+          assert "gear 1 haiku"   "claude --model haiku"                       "$(./gear.sh 1        | tail -1)"
+          assert "gear 2 sonnet"  "claude --model sonnet"                      "$(./gear.sh 2        | tail -1)"
+          assert "gear 3 1M"      "claude --model sonnet[1m]"                  "$(./gear.sh 3        | tail -1)"
+          assert "gear 4 opus"    "claude --model opus"                        "$(./gear.sh 4        | tail -1)"
+          assert "gear 5 fable"   "claude --model claude-fable-5"              "$(./gear.sh 5        | tail -1)"
+
+          # effort passes through
+          assert "gear 5 xhigh"   "claude --model claude-fable-5 --effort xhigh" "$(./gear.sh 5 xhigh | tail -1)"
+
+          # interactive menu pick
+          assert "menu pick 2"    "claude --model sonnet"                      "$(echo 2 | ./gear.sh | tail -1)"
+
+          # bad gear must error and exit non-zero
+          if ./gear.sh 9 >/dev/null 2>&1; then
+            echo "FAIL: gear 9 should have exited non-zero"; exit 1
+          fi
+          echo "ok: bad gear rejected"
+
+          echo "ALL PASSED on ${{ matrix.os }}"
