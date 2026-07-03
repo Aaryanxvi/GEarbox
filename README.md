@@ -2,9 +2,13 @@
 
 [![test gear.sh](https://github.com/Aaryanxvi/GEarbox/actions/workflows/test.yml/badge.svg)](https://github.com/Aaryanxvi/GEarbox/actions/workflows/test.yml)
 
-Gearbox is a physical gear-shifter for Claude Code. It's a floating H-pattern shifter that drives `/model`, `/effort`, and `/fast` in a running Claude session by injecting the commands into your terminal — plus live instrumentation: a fuel gauge for the context window and utilization bars for your rate limits. Switch models by dragging a stick, not by typing.
+Gearbox is a physical gear-shifter for coding agents. It's a floating H-pattern shifter that drives model/effort switching in a running session by injecting the commands into your terminal — plus live instrumentation: a fuel gauge for the context window and utilization bars for your rate limits. Switch models by dragging a stick, not by typing.
 
-Windows runs the full GUI. macOS and Linux get a terminal launcher (`gear.sh`). There's also a launcher for **OpenAI Codex CLI** (`gear-codex.sh`).
+Two flavors:
+- **`shift-gui.ps1`** — for **Claude Code**. Drives `/model`, `/effort`, `/fast`.
+- **`shift-gui-codex.ps1`** — for the **Codex CLI**. Drives `/model`, `/reasoning`, `/compact`. Gears **auto-sync** to whatever models you actually have (read from `~/.codex/models_cache.json`); fuel and usage bars read straight from the session file — no API calls.
+
+Windows runs the full GUI. macOS and Linux get a terminal launcher (`gear.sh`).
 
 <p align="center">
   <img src="dashboard.png" alt="Gearbox dashboard: H-pattern shifter, tachometer, fuel gauge, effort levers, NOS button, and usage bars" width="300">
@@ -47,6 +51,14 @@ powershell -sta -File shift-gui.ps1
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
+### Codex CLI (GUI)
+
+```powershell
+powershell -sta -File shift-gui-codex.ps1
+```
+
+Same shifter, wired for Codex. Gears are built at launch from your `~/.codex/models_cache.json` — you get exactly the models Codex offers you, in priority order. To add a **legacy** model (one Codex only exposes via `codex -m <slug>`), drop its slug into the `$extraModels` array at the top of the script; leave it empty and no legacy gears show. Effort levers send `/reasoning`, the NOS bottle sends `/compact`, and the fuel gauge + 5H/weekly bars read from the session rollout file (no network, no credentials).
+
 ### Launch from inside Claude Code (`/gear`)
 
 Copy the bundled command into your Claude commands directory and point it at your clone:
@@ -68,17 +80,6 @@ chmod +x gear.sh
 ```
 
 `gear.sh` launches a fresh `claude` in the chosen model/effort. Inside a live session, `/model` and `/effort` are the gears.
-
-### OpenAI Codex CLI
-
-```bash
-chmod +x gear-codex.sh
-./gear-codex.sh            # interactive menu
-./gear-codex.sh 3         # gear 3 (medium reasoning effort)
-./gear-codex.sh 4 o3      # gear 4 (high) on an explicit model
-```
-
-Codex's real "gear" is reasoning effort, so the gears shift `model_reasoning_effort` (minimal → high) and the model stays `gpt-5.4` unless you override it. Codex already renders context-remaining and 5-hour/weekly limits in its own status line — set `status_line` in `~/.codex/config.toml` — so there's no separate fuel gauge to build.
 
 ## 📊 The dashboard
 
@@ -103,9 +104,9 @@ Codex's real "gear" is reasoning effort, so the gears shift `model_reasoning_eff
 
 ## 📦 What's inside
 
-- `shift-gui.ps1` — the Windows GUI. Single file, WinForms, no dependencies.
-- `gear.sh` — the macOS/Linux terminal launcher for Claude Code.
-- `gear-codex.sh` — the terminal launcher for OpenAI Codex CLI.
+- `shift-gui.ps1` — the Windows GUI for Claude Code. Single file, WinForms, no dependencies.
+- `shift-gui-codex.ps1` — the Windows GUI for the Codex CLI. Auto-syncs gears from your model cache.
+- `gear.sh` — the macOS/Linux terminal launcher.
 - `commands/gear.md` — the `/gear` slash command for Claude Code.
 
 ## ⚠️ Notes & limitations

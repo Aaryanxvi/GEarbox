@@ -3,3 +3,4 @@
 
 dashboard.png -text
 *.yml text eol=lf
+*.ps1 text eol=crlf
